@@ -51,7 +51,7 @@ public class ezRunner implements ActionListener, FileActionListener
 	// filter dragged files by a file filter, regular expression or substring
 	private String dndFileRule = "*.*";
 	String paramFileKey = "file";
-	String[] paramKeys = null;
+	String[] paramKeys = { paramFileKey };
 	private Map<String, String> paramValues = null;
 
 	private boolean runOnDropEvent = false;
@@ -116,7 +116,7 @@ public class ezRunner implements ActionListener, FileActionListener
 	{
 		paramValues = new HashMap<String, String>();
 		executable = cfg.getStringValue( "executableCommand", "echo", false );
-		paramKeys = cfg.getArray( "executableParameterKeys", "file,user".split( "," ), false );
+		paramKeys = cfg.getStringValue( "executableParameterKeys", "file,user", false ).split( "," );
 		paramFileKey = cfg.getStringValue( "fileParameterKey", "file", false );
 		params = cfg.getStringValue( "executableParameters", "Hello $user! Thank you for dropping file: $file", false );
 		dndFileRule = cfg.getStringValue( "fileAcceptanceFilter", ".*", false );
@@ -195,6 +195,9 @@ public class ezRunner implements ActionListener, FileActionListener
 		{
 			System.out.println( "	EMPTY! Please drag and drop files matching the rule: " + dndFileRule );
 		}
+		System.out.println( "Keys:" );
+		for ( String k : paramKeys )
+			System.out.println( "	" + k + ": " + paramValues.getOrDefault( k, k ) );
 
 		String p = parseParams();
 		System.out.println( "Command:\n\t" + executable );
