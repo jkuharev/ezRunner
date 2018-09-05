@@ -2,11 +2,17 @@
 Graphical User Interface for wrapping command line processes
 
 # License agreement: 'THE BEER-WARE LICENSE'
-  As long as you retain this notice you can do
-  whatever you want with this application.
-  If we meet some day & you think that ezRunner
-  is worth it, you can buy me a beer in return.
-  (c) Joerg Kuharev, 2018
+~~~
+  The software application ezRunner was written by Jørg Kuharev.
+  
+  As long as you retain this notice you can do whatever you want
+  with this application.
+  
+  If we meet some day & you think that ezRunner is worth it, 
+  you can buy me a beer in return.
+~~~
+**© Dr. Jørg Kuharev, 2018**
+
 
 # Quick start
 ezRunner will create a config file during its first execution
