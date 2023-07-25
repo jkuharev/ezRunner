@@ -38,7 +38,7 @@ public class ezRunner implements ActionListener, FileActionListener
 			+ "whatever you want with this application." + endl
 			+ "If we meet some day & you think that ezRunner" + endl
 			+ "is worth it, you can buy me a beer in return." + endl
-			+ "(c) Joerg Kuharev, 2018" + endl
+			+ "(c) Joerg Kuharev, 2023" + endl
 			+ "= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = " + endl;
 
 	private TextWindowDragAndDropUI ui = null;
@@ -49,12 +49,13 @@ public class ezRunner implements ActionListener, FileActionListener
 
 	private Set<File> dndFiles = null;
 	private String executable = "echo";
+	private String workingDir = ".";
 	private String params = "";
 	// filter dragged files by a file filter, regular expression or substring
 	private String dndFileRule = "*.*";
 
 	Set<String> paramKeys = new TreeSet<String>( Arrays.asList( new String[] { "user" } ) );
-	String[] builtinKeys = "file,date,time,timestamp".split( "," );
+	String[] builtinKeys = "file,baseName,date,time,timestamp".split( "," );
 
 	String formatDate = "yyyyMMdd";
 	String formatTime = "HHmmss";
@@ -145,6 +146,8 @@ public class ezRunner implements ActionListener, FileActionListener
 		formatDate = cfg.getStringValue( "exec.params.format.date", formatDate, false );
 		formatTime = cfg.getStringValue( "exec.params.format.time", formatTime, false );
 		formatTimeStamp = cfg.getStringValue( "exec.params.format.timeStamp", formatTimeStamp, false );
+		
+		workingDir = cfg.getStringValue("exec.workingDir", workingDir, false);
 
 		for(String key : paramKeys)
 		{
@@ -195,17 +198,35 @@ public class ezRunner implements ActionListener, FileActionListener
 			{
 				String cmd = getCommandLine();
 				if (createBatchFile && batchFile.canWrite()) XFiles.writeFile( batchFile, cmd + "\n" );
-				executeCommand( cmd );
+				executeCommand( cmd, null );
 			}
 			else
 			{
 				String cmdLines = "";
 				for ( File f : dndFiles )
 				{
+					paramValues.put( "baseName", XFiles.getBaseName(f) );
 					paramValues.put( "file", f.getAbsolutePath() );
+					
 					String cmd = getCommandLine();
 					cmdLines += cmd + "\n";
-					executeCommand( cmd );
+					
+					// no specific directory as fall back
+					File dir = null;
+					
+					if(workingDir == null || workingDir.equals(".") || workingDir.length()<1)
+					{
+						// dragged file's directory if workingDir=. or is not set at all
+						dir = f.getParentFile();
+					}
+					else
+					{
+						// specific path if set and it is a valid directory
+						File absDir = new File(workingDir);
+						if(absDir.isDirectory()) dir = absDir;
+					}
+					executeCommand( cmd, dir );
+					
 				}
 				if (createBatchFile && batchFile.canWrite()) XFiles.writeFile( batchFile, cmdLines );
 
@@ -304,17 +325,16 @@ public class ezRunner implements ActionListener, FileActionListener
 	/** don't touch as we already handle everything in the other method */
 	@Override public void doSingleFileAction(File file){}
 
-	private int executeCommand(String cmd)
+	private int executeCommand(String cmd, File dir)
 	{
+		if(dir != null) System.out.println("working dir\n\t" + dir.getAbsolutePath());
 		System.out.println( "command line:\n\t" + cmd );
 		if (executeCommand)
 		{
 			System.out.println( "executing command ... " );
-			StringBuffer output = new StringBuffer();
-			Process p;
 			try
 			{
-				p = Runtime.getRuntime().exec( cmd );
+				Process p = Runtime.getRuntime().exec(cmd, null, dir);
 				redirectStream( p.getInputStream(), false );
 				redirectStream( p.getErrorStream(), true );
 				p.waitFor();
